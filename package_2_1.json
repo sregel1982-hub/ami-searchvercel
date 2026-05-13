@@ -1,0 +1,15 @@
+{
+  "name": "amisearch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static project'",
+    "deploy": "vercel deploy"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@clerk/clerk-js": "^5.0.0"
+  }
+}

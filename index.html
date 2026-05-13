@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMISEARCH - AI Asszisztens jegyzeteidhez</title>
+  <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8fafc;
+    }
+    header {
+      padding: 1rem 5%;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+    nav a { margin: 0 1rem; text-decoration: none; color: #374151; }
+    .auth-buttons { display: flex; gap: 10px; align-items: center; }
+    .main {
+      padding: 4rem 5%;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+    h1 { font-size: 3rem; line-height: 1.1; margin: 0 0 1rem 0; }
+    .highlight { color: var(--primary); }
+    button {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">AMISEARCH</div>
+    <nav>
+      <a href="#">Főoldal</a>
+      <a href="#">Funkciók</a>
+      <a href="#">Árak</a>
+      <a href="#">Rólunk</a>
+    </nav>
+    <div class="auth-buttons">
+      <div id="clerk-header"></div>
+    </div>
+  </header>
+
+  <section class="main">
+    <div>
+      <h1>A jegyzeteid intelligens <span class="highlight">AI asszisztense</span></h1>
+      <p style="font-size: 1.3rem; color: #4b5563;">
+        Tedd fel kérdéseidet a saját egyetemi jegyzeteidből és kapj azonnali, pontos válaszokat másodpercek alatt.
+      </p>
+      <ul style="font-size: 1.1rem; line-height: 1.8;">
+        <li>✓ 3 ingyenes kérdés regisztráció nélkül</li>
+        <li>✓ Támogatott egyetemi anyagok</li>
+        <li>✓ Gyors, pontos, megbízható</li>
+      </ul>
+      <div style="margin-top: 2rem;">
+        <button class="btn-primary" onclick="window.location.href='dashboard.html'">Kezdés ingyen</button>
+        <button style="background:none; border:2px solid #6366f1; color:#6366f1; margin-left:10px;">Hogyan működik?</button>
+      </div>
+    </div>
+
+    <!-- Jobb oldali chat demo -->
+    <div class="card">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem;">
+        <span style="font-size:2rem;">💬</span>
+        <strong>Tegyél fel egy kérdést a jegyzeteidből!</strong>
+      </div>
+      <input type="text" id="demo-input" placeholder="Pl: Magyarázd el a lineáris regressziót..." 
+             style="width:100%; padding:14px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+      <button onclick="demoAsk()" class="btn-primary" style="width:100%;">Kérdés feltevése →</button>
+      <div id="demo-response" style="margin-top:15px; min-height:100px;"></div>
+    </div>
+  </section>
+
+  <script>
+    const PUBLISHABLE_KEY = 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX';   // ← IDE TEDD A SAJÁT CLERK PUBLISHABLE KEY-T !
+
+    async function initClerk() {
+      if (!PUBLISHABLE_KEY || PUBLISHABLE_KEY.includes('XXXXXXXXXXXXXXXX')) {
+        console.warn("Clerk kulcs még nincs beállítva!");
+        return;
+      }
+
+      const clerk = new Clerk(PUBLISHABLE_KEY);
+      await clerk.load();
+
+      // Header-be rakjuk a User gombot
+      const headerDiv = document.getElementById('clerk-header');
+      clerk.mountUserButton(headerDiv, {
+        afterSignOutUrl: '/',
+        userProfileUrl: '/dashboard.html'
+      });
+
+      // Ha már be van jelentkezve, irányítsuk a dashboard-ra
+      if (clerk.user) {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    // Demo funkció
+    async function demoAsk() {
+      const input = document.getElementById('demo-input');
+      const responseDiv = document.getElementById('demo-response');
+      
+      if (!input.value.trim()) return;
+      
+      responseDiv.innerHTML = '<p><em>Kérdés feldolgozása...</em></p>';
+      
+      try {
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: input.value })
+        });
+        const text = await res.text();
+        responseDiv.innerHTML = `<p><strong>Válasz:</strong> ${text.substring(0, 180)}...</p>`;
+      } catch(e) {
+        responseDiv.innerHTML = '<p style="color:red;">Hiba történt a tesztelés során.</p>';
+      }
+    }
+
+    window.onload = initClerk;
+  </script>
+</body>
+</html>
